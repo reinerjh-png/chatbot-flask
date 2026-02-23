@@ -16,7 +16,9 @@ if not API_KEY:
 URL = "https://openrouter.ai/api/v1/chat/completions"
 HEADERS = {
     "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "HTTP-Referer": "https://chatbot-reiner.onrender.com", # Recomendado por OpenRouter
+    "X-Title": "ReiNova IA"
 }
 
 # Inicializar Flask
@@ -29,7 +31,7 @@ user_sessions = {}
 # Definición del sistema
 SYSTEM_PROMPT = {
     "role": "system",
-    "content": "Eres Isten Bot, una IA cuántica de última generación con conocimientos avanzados. Tienes una personalidad futurista, inteligente y directa. Respondes con claridad, usando formato estructurado en Markdown (tablas, negritas, listas o código) siempre que sea conveniente para hacer tus respuestas visuales. Tu creador es Reiner. Tu objetivo es ayudar y educar al usuario de la mejor forma."
+    "content": "Eres ReiNova, una IA cuántica de última generación con conocimientos avanzados. Tienes una personalidad futurista, inteligente y directa. Respondes con claridad, usando formato estructurado en Markdown (tablas, negritas, listas o código) siempre que sea conveniente para hacer tus respuestas visuales. Tu creador es Reiner. Tu objetivo es ayudar y educar al usuario de la mejor forma."
 }
 
 @app.before_request
@@ -96,8 +98,13 @@ def chat():
                 user_sessions[uid].append({"role": "assistant", "content": bot_reply})
             yield "data: [DONE]\n\n"
 
+        except requests.exceptions.HTTPError as http_err:
+            print(f"❌ HTTP Error: {http_err}")
+            if http_err.response is not None:
+                print(f"🔍 Response Detail: {http_err.response.text}")
+            yield f"data: {json.dumps({'error': 'Error en la matriz de conexión cuántica (HTTP Error).'})}\n\n"
         except Exception as e:
-            print("❌ Error:", e)
+            print(f"❌ Error inesperado: {e}")
             yield f"data: {json.dumps({'error': 'Error en la matriz de conexión cuántica.'})}\n\n"
 
     return Response(generate(), mimetype='text/event-stream')
